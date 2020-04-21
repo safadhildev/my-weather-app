@@ -64,6 +64,12 @@ const App = () => {
 
   return (
     <>
+      <StatusBar
+        backgroundColor={'rgba(0,0,0,0)'}
+        barStyle="dark-content"
+        translucent
+      />
+
       <Navigator />
     </>
   );

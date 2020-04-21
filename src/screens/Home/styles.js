@@ -1,7 +1,13 @@
-const styles = {
+import {StyleSheet} from 'react-native';
+
+const styles = StyleSheet.create({
   homeBody: {
     flex: 1,
-    justifyContent: 'center',
+    paddingTop: 30,
+  },
+  weatherContainer: {
+    flexGrow: 1,
+    paddingTop: 20,
   },
   scrollViewContainer: {
     flexGrow: 1,
@@ -10,26 +16,32 @@ const styles = {
     paddingHorizontal: 20,
     paddingTop: 20,
     fontSize: 25,
+    color: '#FFFFFF',
   },
   currentWeatherContainer: {
     margin: 20,
     alignItems: 'center',
   },
-  currentCity: {
+  currentCityText: {
+    fontSize: 24,
+    color: '#FFFFFF',
+  },
+  currentDateText: {
     fontSize: 12,
+    color: '#FFFFFF',
   },
-  currentDate: {
-    fontSize: 12,
+  currentTimeText: {
+    fontSize: 36,
+    color: '#FFFFFF',
   },
-  currentTemp: {
-    fontSize: 56,
+  currentTempText: {
+    fontSize: 100,
+    color: '#FFFFFF',
   },
-  currentDetails: {
-    fontSize: 12,
+  currentDetailsText: {
+    fontSize: 18,
+    color: '#FFFFFF',
   },
-  currentWeatherCard: {
-    borderRadius: 10,
-  },
-};
+});
 
 export default styles;
