@@ -7,8 +7,11 @@ import styles from './styles';
 import {ScrollView} from 'react-native-gesture-handler';
 import {kelvinToCelcius} from '../../uitls';
 import LinearGradient from 'react-native-linear-gradient';
+import moment from 'moment-timezone';
 const Home = ({navigation, route}) => {
   const [city, setCity] = useState(null);
+  const [date, setDate] = useState(null);
+  const [time, setTime] = useState(null);
   const [currentData, setCurrentData] = useState(null);
 
   useEffect(() => {
@@ -26,15 +29,18 @@ const Home = ({navigation, route}) => {
       const url = `https://api.openweathermap.org/data/2.5/weather?q=Seremban&appid=a31e03e7c69aaf51a115819113a8b3d7`;
 
       const response = await fetch(url);
-      const data = await response.json();
+      if (response.status === 200) {
+        const data = await response.json();
+        console.log(moment().tz('Asia/Kuala_Lumpur').format('LTS'));
 
-      console.log(response);
-
-      setCurrentData({
-        city: `${data.name}, ${data.sys.country}`,
-        temperature: kelvinToCelcius(data.main.temp),
-        description: data.weather[0].description,
-      });
+        setDate(moment().format('dddd MMM Do YYYY'));
+        setTime(moment().tz('Asia/Kuala_Lumpur').format('LT'));
+        setCurrentData({
+          city: `${data.name}, ${data.sys.country}`,
+          temperature: kelvinToCelcius(data.main.temp),
+          description: data.weather[0].description,
+        });
+      }
     } catch (error) {
       console.log('eeror', error);
     }
@@ -51,14 +57,20 @@ const Home = ({navigation, route}) => {
       const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=a31e03e7c69aaf51a115819113a8b3d7`;
 
       const response = await fetch(url);
-      const data = await response.json();
-      console.log(data);
+      console.log(response);
 
-      setCurrentData({
-        city: `${data.name}, ${data.sys.country}`,
-        temperature: kelvinToCelcius(data.main.temp),
-        description: data.weather[0].description,
-      });
+      if (response === 200) {
+        const data = await response.json();
+        console.log(data);
+
+        setDate(moment().format('dddd MMM Do YYYY'));
+        setTime(moment().tz('Asia/Kuala_Lumpur').format('LTS'));
+        setCurrentData({
+          city: `${data.name}, ${data.sys.country}`,
+          temperature: kelvinToCelcius(data.main.temp),
+          description: data.weather[0].description,
+        });
+      }
     } catch (error) {
       console.log('eeror', error);
     }
@@ -80,8 +92,8 @@ const Home = ({navigation, route}) => {
 
         {currentData ? (
           <View style={styles.currentWeatherContainer}>
-            <Text style={styles.currentDateText}>Monday, Apr 20 2020,</Text>
-            <Text style={styles.currentTimeText}>17:15</Text>
+            <Text style={styles.currentDateText}>{date}</Text>
+            <Text style={styles.currentTimeText}>{time}</Text>
 
             <Text style={styles.currentCityText}>{currentData.city}</Text>
             <Text style={styles.currentTempText}>
@@ -96,7 +108,15 @@ const Home = ({navigation, route}) => {
             <Text>Search a city</Text>
           </View>
         )}
-        <Button title="Details" onPress={()=>{alert("Detailss")}}/>
+        <Button
+          title="Details"
+          onPress={() => {
+            navigation.navigate('Details', {
+              name: 'Fadhil',
+              age: 25,
+            });
+          }}
+        />
 
         {/* <Button
             title="Details"

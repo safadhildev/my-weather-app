@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   currentCityText: {
-    fontSize: 24,
+    fontSize: 18,
     color: '#FFFFFF',
   },
   currentDateText: {
