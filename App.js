@@ -66,7 +66,7 @@ const App = () => {
     <>
       <StatusBar
         backgroundColor={'rgba(0,0,0,0)'}
-        barStyle="dark-content"
+        barStyle="light-content"
         translucent
       />
 

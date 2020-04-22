@@ -1,6 +1,9 @@
 import React from 'react';
 import {View, TextInput, StyleSheet, Button, Image} from 'react-native';
 import {TouchableOpacity} from 'react-native-gesture-handler';
+
+const searchIcon = require('../../../assets/icons/magnifying-glass.png');
+
 const styles = StyleSheet.create({
   inputContainer: {
     backgroundColor: 'rgba(0,0,0,0.3)',
@@ -24,8 +27,7 @@ const styles = StyleSheet.create({
   searchButton: {
     width: 30,
     height: 30,
-    backgroundColor: 'rgba(0,150,136,1)',
-    //backgroundColor: '#FFF',
+    backgroundColor: '#E3E9ED',
     borderRadius: 50,
     elevation: 4,
     justifyContent: 'center',
@@ -38,7 +40,18 @@ const styles = StyleSheet.create({
   },
 });
 
-const Input = ({onPress, onChangeText, value}) => {
+const Input = ({onPress, onChangeText, value, weather}) => {
+  const buttonBackgroundColor = () => {
+    switch (weather) {
+      case 'sunny':
+        return style.yellowSearchButton;
+      case 'rain':
+        return style.blueSearchButton;
+      case 'cloud':
+        return style.greySearchButton;
+    }
+  };
+
   return (
     <View style={styles.inputContainer}>
       <TextInput
@@ -50,10 +63,7 @@ const Input = ({onPress, onChangeText, value}) => {
       />
       <TouchableOpacity style={styles.searchButton} onPress={onPress}>
         <View>
-          <Image
-            style={styles.icon}
-            source={require('../../../assets/icons/baseline_search_white_18dp.png')}
-          />
+          <Image style={styles.icon} source={searchIcon} />
         </View>
       </TouchableOpacity>
     </View>

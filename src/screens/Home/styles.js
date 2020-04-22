@@ -7,7 +7,7 @@ const styles = StyleSheet.create({
   },
   weatherContainer: {
     flexGrow: 1,
-    paddingTop: 20,
+    paddingTop: 10,
   },
   scrollViewContainer: {
     flexGrow: 1,
@@ -31,15 +31,15 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   currentTimeText: {
-    fontSize: 36,
+    fontSize: 24,
     color: '#FFFFFF',
   },
   currentTempText: {
-    fontSize: 100,
+    fontSize: 56,
     color: '#FFFFFF',
   },
   currentDetailsText: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#FFFFFF',
   },
 });
