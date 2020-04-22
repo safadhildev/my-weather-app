@@ -24,6 +24,7 @@ const Home = ({navigation, route}) => {
   const [time, setTime] = useState(null);
   const [currentData, setCurrentData] = useState(null);
   const [main, setMain] = useState(null);
+  const [fiveForecast, setFiveForecast] = useState(null);
 
   useEffect(() => {
     if (route.params?.updated) {
@@ -32,8 +33,8 @@ const Home = ({navigation, route}) => {
   }, [route.params?.updated]);
 
   useEffect(() => {
-    //getCurrentLocationWeather();
-    // getCurrentLocationHourlyForecast();
+    getCurrentLocationWeather();
+    getCurrentLocationForecast();
   }, []);
 
   const getCurrentLocationWeather = async () => {
@@ -62,13 +63,24 @@ const Home = ({navigation, route}) => {
     }
   };
 
-  const getCurrentLocationHourlyForecast = async () => {
-    const url = `https://api.openweathermap.org/data/2.5/forecast?q=Seremban&appid=a31e03e7c69aaf51a115819113a8b3d7`;
+  const getCurrentLocationForecast = async () => {
     try {
+      const url = `https://api.openweathermap.org/data/2.5/forecast?q=Seremban&appid=a31e03e7c69aaf51a115819113a8b3d7`;
       const response = await fetch(url);
       if (response.status === 200) {
-        const forecastData = await response.json();
-        console.log('forecast', forecastData.list);
+        const data = await response.json();
+        const forecastArray = data.list.slice(0, 5);
+        let fiveData = [];
+        forecastArray.map((item) => {
+          const oneData = {
+            time: moment.unix(item.dt).tz('Asia/Kuala_Lumpur').format('LT'),
+            temperature: kelvinToCelcius(item.main.temp_max),
+            description: item.weather[0].description,
+            main: item.weather[0].main,
+          };
+          fiveData.push(oneData);
+        });
+        setFiveForecast(fiveData);
       }
     } catch (error) {
       console.log('Error', error);
@@ -97,6 +109,7 @@ const Home = ({navigation, route}) => {
         });
 
         setMain(data.weather[0].main);
+        getWeatherForecast();
       }
     } catch (error) {
       console.log('eeror', error);
@@ -104,8 +117,32 @@ const Home = ({navigation, route}) => {
     }
   };
 
-  const renderIcon = () => {
-    switch (main) {
+  const getWeatherForecast = async () => {
+    try {
+      const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=a31e03e7c69aaf51a115819113a8b3d7`;
+      const response = await fetch(url);
+      if (response.status === 200) {
+        const data = await response.json();
+        const forecastArray = data.list.slice(0, 5);
+        let fiveData = [];
+        forecastArray.map((item) => {
+          const oneData = {
+            time: moment.unix(item.dt).tz('Asia/Kuala_Lumpur').format('LT'),
+            temperature: kelvinToCelcius(item.main.temp_max),
+            description: item.weather[0].description,
+            main: item.weather[0].main,
+          };
+          fiveData.push(oneData);
+        });
+        setFiveForecast(fiveData);
+      }
+    } catch (error) {
+      console.log('Error', error);
+    }
+  };
+
+  const renderIcon = (condition) => {
+    switch (condition) {
       case 'Clouds':
         return icon.clouds;
       case 'Thunderstorm':
@@ -150,9 +187,9 @@ const Home = ({navigation, route}) => {
         value={city}
         weather={main}
       />
-      <View style={styles.buttonWrapper}>
+      {/* <View style={{flexDirection: 'row', alignItems: 'flex-start'}}>
         <Button title="Refresh" />
-      </View>
+      </View> */}
       <View style={styles.weatherContainer}>
         {currentData ? (
           <View style={styles.currentWeatherContainer}>
@@ -163,7 +200,7 @@ const Home = ({navigation, route}) => {
             </View>
 
             <View style={styles.weatherWrapper}>
-              <Image source={renderIcon()} style={styles.icon} />
+              <Image source={renderIcon(main)} style={styles.icon} />
               <Text style={styles.currentTempText}>
                 {currentData.temperature}°
               </Text>
@@ -180,6 +217,30 @@ const Home = ({navigation, route}) => {
                   navigation.navigate('Details', currentData);
                 }}
               />
+            </View>
+
+            <View style={styles.forecastContainer}>
+              {fiveForecast &&
+                fiveForecast.map((item) => {
+                  console.log(fiveForecast);
+
+                  return (
+                    <View style={styles.forecastCardContainer}>
+                      <Text style={styles.forecastText}>{item.time}</Text>
+                      <Image
+                        source={renderIcon(item.main)}
+                        style={styles.forecastIcon}
+                      />
+                      <Text style={styles.forecastText}>
+                        {item.temperature}°
+                      </Text>
+
+                      <Text style={styles.forecastText}>
+                        {item.description}°
+                      </Text>
+                    </View>
+                  );
+                })}
             </View>
           </View>
         ) : (

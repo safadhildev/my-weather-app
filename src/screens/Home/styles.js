@@ -3,23 +3,15 @@ import {StyleSheet} from 'react-native';
 const styles = StyleSheet.create({
   homeBody: {
     flex: 1,
-    paddingTop: 30,
+    paddingVertical: 30,
   },
   weatherContainer: {
     flexGrow: 1,
   },
-  scrollViewContainer: {
-    flexGrow: 1,
-  },
-  headerText: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    fontSize: 25,
-    color: '#FFFFFF',
-  },
   buttonWrapper: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    marginVertical: 20,
   },
   currentWeatherContainer: {
     paddingVertical: 10,
@@ -53,7 +45,7 @@ const styles = StyleSheet.create({
   icon: {
     width: 100,
     height: 100,
-    margin: 20,
+    paddingVertical: 5,
   },
   notFoundText: {
     flexGrow: 1,
@@ -62,6 +54,26 @@ const styles = StyleSheet.create({
     color: '#FFF',
     textAlign: 'center',
     fontSize: 22,
+  },
+  forecastContainer: {
+    flexGrow: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 20,
+  },
+  forecastCardContainer: {
+    alignItems: 'center',
+    width: 50,
+  },
+  forecastText: {
+    color: '#fff',
+    fontSize: 12,
+    width: 70,
+    textAlign: 'center',
+  },
+  forecastIcon: {
+    width: 40,
+    height: 40,
   },
 });
 
