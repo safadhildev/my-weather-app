@@ -7,7 +7,6 @@ const styles = StyleSheet.create({
   },
   weatherContainer: {
     flexGrow: 1,
-    paddingTop: 10,
   },
   scrollViewContainer: {
     flexGrow: 1,
@@ -18,12 +17,21 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: '#FFFFFF',
   },
+  buttonWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
   currentWeatherContainer: {
-    margin: 20,
+    paddingVertical: 10,
+  },
+  currentInfoWrapper: {
+    alignItems: 'center',
+  },
+  weatherWrapper: {
     alignItems: 'center',
   },
   currentCityText: {
-    fontSize: 18,
+    fontSize: 14,
     color: '#FFFFFF',
   },
   currentDateText: {
@@ -31,7 +39,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   currentTimeText: {
-    fontSize: 24,
+    fontSize: 18,
     color: '#FFFFFF',
   },
   currentTempText: {
@@ -41,6 +49,19 @@ const styles = StyleSheet.create({
   currentDetailsText: {
     fontSize: 14,
     color: '#FFFFFF',
+  },
+  icon: {
+    width: 100,
+    height: 100,
+    margin: 20,
+  },
+  notFoundText: {
+    flexGrow: 1,
+    width: '100%',
+    marginTop: 50,
+    color: '#FFF',
+    textAlign: 'center',
+    fontSize: 22,
   },
 });
 

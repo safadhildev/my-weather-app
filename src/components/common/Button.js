@@ -6,20 +6,17 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     width: 80,
-    height: 30,
-    borderRadius: 20,
     paddingVertical: 5,
-    alignSelf: 'flex-end',
+    borderRadius: 20,
     marginHorizontal: 20,
   },
   buttonWrapper: {
-    width: '100%',
-    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonText: {
     color: '#FFF',
+    fontSize: 12,
   },
 });
 

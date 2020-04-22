@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import {View, Text, Image} from 'react-native';
-import Input from '../../components/common/Input';
+import Search from '../../components/common/Search';
 import Button from '../../components/common/Button';
 
 import styles from './styles';
@@ -8,6 +8,8 @@ import {ScrollView} from 'react-native-gesture-handler';
 import {kelvinToCelcius} from '../../uitls';
 import LinearGradient from 'react-native-linear-gradient';
 import moment from 'moment-timezone';
+import color from '../../components/common/Color';
+import icon from '../../components/common/Icon';
 
 const cloud = require('../../../assets/weathers/cloud.png');
 const drizzle = require('../../../assets/weathers/drizzle.png');
@@ -16,17 +18,12 @@ const sunny = require('../../../assets/weathers/sunny-day.png');
 const mostlyCloudy = require('../../../assets/weathers/cloud.png');
 const rain = require('../../../assets/weathers/rainy-day.png');
 
-const grey = ['#859398', '#283048'];
-const green = ['#44A08D', '#093637'];
-const yellow = ['#edde5d', '#f09819'];
-const blueDarker = ['#1488cc', '#2b32b2'];
-const blue = ['#56ccf2', '#2f80ed'];
-
 const Home = ({navigation, route}) => {
   const [city, setCity] = useState(null);
   const [date, setDate] = useState(null);
   const [time, setTime] = useState(null);
   const [currentData, setCurrentData] = useState(null);
+  const [main, setMain] = useState(null);
 
   useEffect(() => {
     if (route.params?.updated) {
@@ -53,8 +50,12 @@ const Home = ({navigation, route}) => {
         setCurrentData({
           city: `${data.name}, ${data.sys.country}`,
           temperature: kelvinToCelcius(data.main.temp),
+          tempMax: kelvinToCelcius(data.main.temp_max),
+          tempMin: kelvinToCelcius(data.main.temp_min),
           description: data.weather[0].description,
         });
+        setMain(data.weather[0].main);
+        console.log(currentData);
       }
     } catch (error) {
       console.log('eeror', error);
@@ -90,17 +91,56 @@ const Home = ({navigation, route}) => {
         setCurrentData({
           city: `${data.name}, ${data.sys.country}`,
           temperature: kelvinToCelcius(data.main.temp),
+          tempMax: kelvinToCelcius(data.main.temp_max),
+          tempMin: kelvinToCelcius(data.main.temp_min),
           description: data.weather[0].description,
         });
+
+        setMain(data.weather[0].main);
       }
     } catch (error) {
       console.log('eeror', error);
+      setCurrentData(null);
+    }
+  };
+
+  const renderIcon = () => {
+    switch (main) {
+      case 'Clouds':
+        return icon.clouds;
+      case 'Thunderstorm':
+        return icon.thunderstorm;
+      case 'Rain':
+        return icon.rain;
+      case 'Clear':
+        return icon.clear;
+      case 'Drizzle':
+        return icon.drizzle;
+      default:
+        return icon.clear;
+    }
+  };
+
+  const backgroundColor = () => {
+    switch (main) {
+      case 'Clouds':
+        return color.linearGrey;
+      case 'Thunderstorm':
+        return color.linearBlueDarker;
+      case 'Rain':
+        return color.linearBlueDarker;
+      case 'Clear':
+        return color.linearYellow;
+      case 'Drizzle':
+        return color.linearBlue;
+      default:
+        return color.linearGreen;
     }
   };
 
   return (
-    <LinearGradient colors={blue} style={styles.homeBody}>
-      <Input
+    <LinearGradient colors={backgroundColor()} style={styles.homeBody}>
+      <Search
         onChangeText={(text) => {
           setCity(text);
         }}
@@ -108,42 +148,47 @@ const Home = ({navigation, route}) => {
           onSearch();
         }}
         value={city}
+        weather={main}
       />
+      <View style={styles.buttonWrapper}>
+        <Button title="Refresh" />
+      </View>
       <View style={styles.weatherContainer}>
-        {/* <Text style={styles.headerText}>Open Weather</Text> */}
-
         {currentData ? (
           <View style={styles.currentWeatherContainer}>
-            <Text style={styles.currentDateText}>{date}</Text>
-            <Text style={styles.currentTimeText}>{time}</Text>
+            <View style={styles.currentInfoWrapper}>
+              <Text style={styles.currentDateText}>{date}</Text>
+              <Text style={styles.currentTimeText}>{time}</Text>
+              <Text style={styles.currentCityText}>{currentData.city}</Text>
+            </View>
 
-            <Text style={styles.currentCityText}>{currentData.city}</Text>
-            <Image
-              source={{uri: 'http://openweathermap.org/img/w/01d.png'}}
-              style={{width: 100, height: 100}}
-            />
-            <Text style={styles.currentTempText}>
-              {currentData.temperature}°
-            </Text>
+            <View style={styles.weatherWrapper}>
+              <Image source={renderIcon()} style={styles.icon} />
+              <Text style={styles.currentTempText}>
+                {currentData.temperature}°
+              </Text>
 
-            <Text style={styles.currentDetailsText}>
-              {currentData.description}
-            </Text>
+              <Text style={styles.currentDetailsText}>
+                {currentData.description}
+              </Text>
+            </View>
+
+            <View style={styles.buttonWrapper}>
+              <Button
+                title="More"
+                onPress={() => {
+                  navigation.navigate('Details', currentData);
+                }}
+              />
+            </View>
           </View>
         ) : (
           <View style={styles.currentWeatherContainer}>
-            <Text>Search a city</Text>
+            <Text style={styles.notFoundText}>
+              Whoops! Couldn't find your city
+            </Text>
           </View>
         )}
-        <Button
-          title="Details"
-          onPress={() => {
-            navigation.navigate('Details', {
-              name: 'Fadhil',
-              age: 25,
-            });
-          }}
-        />
 
         {/* <Button
             title="Details"
