@@ -1,30 +1,38 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, Image} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  KeyboardAvoidingView,
+  Keyboard,
+  TouchableWithoutFeedback,
+  Dimensions,
+  FlatList,
+  Platform,
+} from 'react-native';
 import Search from '../../components/common/Search';
 import Button from '../../components/common/Button';
-
+import Geolocation from '@react-native-community/geolocation';
 import styles from './styles';
 import {ScrollView} from 'react-native-gesture-handler';
-import {kelvinToCelcius} from '../../uitls';
+import {kelvinToCelcius} from '../../utils';
 import LinearGradient from 'react-native-linear-gradient';
 import moment from 'moment-timezone';
 import color from '../../components/common/Color';
 import icon from '../../components/common/Icon';
+import {PermissionsAndroid} from 'react-native';
 
-const cloud = require('../../../assets/weathers/cloud.png');
-const drizzle = require('../../../assets/weathers/drizzle.png');
-const thunder = require('../../../assets/weathers/lighting.png');
-const sunny = require('../../../assets/weathers/sunny-day.png');
-const mostlyCloudy = require('../../../assets/weathers/cloud.png');
-const rain = require('../../../assets/weathers/rainy-day.png');
+const height = Dimensions.get('window').height;
 
 const Home = ({navigation, route}) => {
   const [city, setCity] = useState(null);
-  const [date, setDate] = useState(null);
-  const [time, setTime] = useState(null);
   const [currentData, setCurrentData] = useState(null);
   const [main, setMain] = useState(null);
-  const [fiveForecast, setFiveForecast] = useState(null);
+  const [forecastData, setForecastData] = useState(null);
+  const [fiveData, setFiveData] = useState(null);
+  const [error, setError] = useState(true);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
 
   useEffect(() => {
     if (route.params?.updated) {
@@ -34,111 +42,147 @@ const Home = ({navigation, route}) => {
 
   useEffect(() => {
     getCurrentLocationWeather();
-    getCurrentLocationForecast();
-  }, []);
+  }, [latitude, longitude]);
+
+  const getLocation = async () => {
+    if (Platform.OS !== 'android') Geolocation.requestAuthorization();
+    else {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: 'we need GPS location service',
+            message: 'we need location service to provide your location',
+            // buttonNeutral: 'Ask Me Later',
+            buttonNegative: 'Cancel',
+            buttonPositive: 'OK',
+          },
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('getting location');
+          Geolocation.getCurrentPosition((info) => {
+            const {coords, timestamp} = info;
+
+            setLatitude(coords.latitude);
+            setLongitude(coords.longitude);
+          }, geoError());
+        } else {
+          console.log('em');
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+  };
+
+  const geoError = (error) => {
+    if (error) {
+      console.log('Error');
+    }
+  };
 
   const getCurrentLocationWeather = async () => {
-    try {
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=Seremban&appid=a31e03e7c69aaf51a115819113a8b3d7`;
+    const url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=a31e03e7c69aaf51a115819113a8b3d7`;
+    const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=a31e03e7c69aaf51a115819113a8b3d7`;
+    await getData(url);
+    await getForecastData(forecastUrl);
+  };
 
+  const getData = async (url) => {
+    try {
       const response = await fetch(url);
       if (response.status === 200) {
         const data = await response.json();
-        console.log(moment().tz('Asia/Kuala_Lumpur').format('LTS'));
+        // console.log(moment().tz('Asia/Kuala_Lumpur').format('LTS'));
 
-        setDate(moment().format('dddd MMM Do YYYY'));
-        setTime(moment().tz('Asia/Kuala_Lumpur').format('LT'));
         setCurrentData({
           city: `${data.name}, ${data.sys.country}`,
           temperature: kelvinToCelcius(data.main.temp),
           tempMax: kelvinToCelcius(data.main.temp_max),
           tempMin: kelvinToCelcius(data.main.temp_min),
           description: data.weather[0].description,
+          main: data.weather[0].main,
+          date: moment().format('dddd, MMM Do YYYY'),
+          time: moment().tz('Asia/Kuala_Lumpur').format('LT'),
         });
         setMain(data.weather[0].main);
-        console.log(currentData);
-      }
-    } catch (error) {
-      console.log('eeror', error);
-    }
-  };
-
-  const getCurrentLocationForecast = async () => {
-    try {
-      const url = `https://api.openweathermap.org/data/2.5/forecast?q=Seremban&appid=a31e03e7c69aaf51a115819113a8b3d7`;
-      const response = await fetch(url);
-      if (response.status === 200) {
-        const data = await response.json();
-        const forecastArray = data.list.slice(0, 5);
-        let fiveData = [];
-        forecastArray.map((item) => {
-          const oneData = {
-            time: moment.unix(item.dt).tz('Asia/Kuala_Lumpur').format('LT'),
-            temperature: kelvinToCelcius(item.main.temp_max),
-            description: item.weather[0].description,
-            main: item.weather[0].main,
-          };
-          fiveData.push(oneData);
-        });
-        setFiveForecast(fiveData);
+        setError(false);
       }
     } catch (error) {
       console.log('Error', error);
     }
   };
+
+  const getForecastData = async (url) => {
+    try {
+      const response = await fetch(url);
+      if (response.status === 200) {
+        const data = await response.json();
+        const forecastArray = data.list;
+        let forecasts = [];
+        forecastArray.forEach((item) => {
+          const oneData = {
+            time: moment.unix(item.dt).tz('Asia/Kuala_Lumpur').format('LT'),
+            temperature: kelvinToCelcius(item.main.temp_max),
+            description: item.weather[0].description,
+            main: item.weather[0].main,
+            date: moment.unix(item.dt).format('l'),
+            id: item.dt,
+          };
+          forecasts.push(oneData);
+        });
+        setForecastData(forecasts);
+        setFiveData(forecasts.slice(0, 5));
+        setError(false);
+        console.log(forecasts.slice(0, 10));
+      }
+    } catch (error) {
+      console.log('Error', error);
+      setError(true);
+    }
+  };
+
   const onSearch = async () => {
-    console.log(city);
+    console.log('Search City:', city);
 
-    try {
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=a31e03e7c69aaf51a115819113a8b3d7`;
-
-      const response = await fetch(url);
-
-      if (response.status === 200) {
-        const data = await response.json();
-        console.log(data);
-        console.log(response);
-        setDate(moment().format('dddd MMM Do YYYY'));
-        setTime(moment().tz('Asia/Kuala_Lumpur').format('LT'));
-        setCurrentData({
-          city: `${data.name}, ${data.sys.country}`,
-          temperature: kelvinToCelcius(data.main.temp),
-          tempMax: kelvinToCelcius(data.main.temp_max),
-          tempMin: kelvinToCelcius(data.main.temp_min),
-          description: data.weather[0].description,
-        });
-
-        setMain(data.weather[0].main);
-        getWeatherForecast();
-      }
-    } catch (error) {
-      console.log('eeror', error);
+    if (!city) {
       setCurrentData(null);
+      setError(true);
+    } else {
+      await getData(
+        `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=a31e03e7c69aaf51a115819113a8b3d7`,
+      );
+      await getForecastData(
+        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=a31e03e7c69aaf51a115819113a8b3d7`,
+      );
     }
   };
 
-  const getWeatherForecast = async () => {
-    try {
-      const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=a31e03e7c69aaf51a115819113a8b3d7`;
-      const response = await fetch(url);
-      if (response.status === 200) {
-        const data = await response.json();
-        const forecastArray = data.list.slice(0, 5);
-        let fiveData = [];
-        forecastArray.map((item) => {
-          const oneData = {
-            time: moment.unix(item.dt).tz('Asia/Kuala_Lumpur').format('LT'),
-            temperature: kelvinToCelcius(item.main.temp_max),
-            description: item.weather[0].description,
-            main: item.weather[0].main,
-          };
-          fiveData.push(oneData);
-        });
-        setFiveForecast(fiveData);
-      }
-    } catch (error) {
-      console.log('Error', error);
-    }
+  const renderForecast = ({item}) => {
+    return (
+      <View
+        style={{
+          alignItems: 'center',
+        }}>
+        <Text style={styles.forecastText} allowFontScaling={false}>
+          {item.time}
+        </Text>
+        <View style={styles.forecastImageWrapper}>
+          <Image
+            source={renderIcon(item.main)}
+            style={styles.forecastIcon}
+            resizeMode="contain"
+          />
+        </View>
+        <Text style={styles.forecastText} allowFontScaling={false}>
+          {item.temperature}°C
+        </Text>
+
+        <Text style={styles.forecastText} allowFontScaling={false}>
+          {item.description}
+        </Text>
+      </View>
+    );
   };
 
   const renderIcon = (condition) => {
@@ -158,7 +202,7 @@ const Home = ({navigation, route}) => {
     }
   };
 
-  const backgroundColor = () => {
+  const backgroundColor = (main) => {
     switch (main) {
       case 'Clouds':
         return color.linearGrey;
@@ -175,8 +219,16 @@ const Home = ({navigation, route}) => {
     }
   };
 
+  const onDetails = () => {
+    navigation.navigate('Details', {currentData, forecastData});
+  };
+
   return (
-    <LinearGradient colors={backgroundColor()} style={styles.homeBody}>
+    <LinearGradient
+      colors={
+        currentData ? backgroundColor(currentData.main) : color.linearGreen
+      }
+      style={styles.homeBody}>
       <Search
         onChangeText={(text) => {
           setCity(text);
@@ -187,80 +239,67 @@ const Home = ({navigation, route}) => {
         value={city}
         weather={main}
       />
-      {/* <View style={{flexDirection: 'row', alignItems: 'flex-start'}}>
-        <Button title="Refresh" />
-      </View> */}
-      <View style={styles.weatherContainer}>
-        {currentData ? (
-          <View style={styles.currentWeatherContainer}>
-            <View style={styles.currentInfoWrapper}>
-              <Text style={styles.currentDateText}>{date}</Text>
-              <Text style={styles.currentTimeText}>{time}</Text>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          {currentData && (
+            <View
+              style={{
+                alignItems: 'center',
+                marginTop: 100,
+              }}>
               <Text style={styles.currentCityText}>{currentData.city}</Text>
-            </View>
-
-            <View style={styles.weatherWrapper}>
-              <Image source={renderIcon(main)} style={styles.icon} />
+              <Text style={styles.currentDateText}>{currentData.date}</Text>
+              <Text style={styles.currentTimeText}>{currentData.time}</Text>
+              <View style={styles.imageWrapper}>
+                <Image
+                  source={renderIcon(currentData.main)}
+                  style={styles.icon}
+                />
+              </View>
               <Text style={styles.currentTempText}>
-                {currentData.temperature}°
+                {currentData.temperature}°C
               </Text>
-
               <Text style={styles.currentDetailsText}>
                 {currentData.description}
               </Text>
-            </View>
 
-            <View style={styles.buttonWrapper}>
-              <Button
-                title="More"
-                onPress={() => {
-                  navigation.navigate('Details', currentData);
+              <View style={styles.buttonWrapper}>
+                <Button
+                  title={'More'}
+                  onPress={() => {
+                    onDetails();
+                  }}
+                />
+              </View>
+            </View>
+          )}
+
+          {forecastData && (
+            <View>
+              <FlatList
+                data={forecastData && forecastData.slice(0, 5)}
+                renderItem={(item) => renderForecast(item)}
+                horizontal
+                style={{}}
+                contentContainerStyle={{
+                  flex: 1,
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 10,
+                }}
+                keyExtractor={(item, index) => {
+                  index;
                 }}
               />
             </View>
+          )}
 
-            <View style={styles.forecastContainer}>
-              {fiveForecast &&
-                fiveForecast.map((item) => {
-                  console.log(fiveForecast);
-
-                  return (
-                    <View style={styles.forecastCardContainer}>
-                      <Text style={styles.forecastText}>{item.time}</Text>
-                      <Image
-                        source={renderIcon(item.main)}
-                        style={styles.forecastIcon}
-                      />
-                      <Text style={styles.forecastText}>
-                        {item.temperature}°
-                      </Text>
-
-                      <Text style={styles.forecastText}>
-                        {item.description}°
-                      </Text>
-                    </View>
-                  );
-                })}
+          {error && (
+            <View>
+              <Text style={styles.notFoundText}>City not found</Text>
             </View>
-          </View>
-        ) : (
-          <View style={styles.currentWeatherContainer}>
-            <Text style={styles.notFoundText}>
-              Whoops! Couldn't find your city
-            </Text>
-          </View>
-        )}
-
-        {/* <Button
-            title="Details"
-            onPress={() => {
-              navigation.navigate('Details', {
-                name: 'Fadhil',
-                age: 25,
-              });
-            }}
-          /> */}
-      </View>
+          )}
+        </View>
+      </TouchableWithoutFeedback>
     </LinearGradient>
   );
 };

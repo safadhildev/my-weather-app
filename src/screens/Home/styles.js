@@ -1,20 +1,21 @@
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Dimensions} from 'react-native';
+
+const height = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
-  homeBody: {
+  homeBody: {flexGrow: 1, paddingTop: 40},
+  container: {
     flex: 1,
-    paddingVertical: 30,
-  },
-  weatherContainer: {
-    flexGrow: 1,
+    justifyContent: 'space-between',
   },
   buttonWrapper: {
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginVertical: 20,
   },
   currentWeatherContainer: {
-    paddingVertical: 10,
+    flex: 1,
+    justifyContent: 'center',
   },
   currentInfoWrapper: {
     alignItems: 'center',
@@ -23,15 +24,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   currentCityText: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#FFFFFF',
   },
   currentDateText: {
-    fontSize: 12,
+    fontSize: 16,
     color: '#FFFFFF',
   },
   currentTimeText: {
-    fontSize: 18,
+    fontSize: 36,
     color: '#FFFFFF',
   },
   currentTempText: {
@@ -39,24 +40,28 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   currentDetailsText: {
-    fontSize: 14,
+    fontSize: 18,
     color: '#FFFFFF',
   },
-  icon: {
+  imageWrapper: {
     width: 100,
     height: 100,
-    paddingVertical: 5,
+  },
+  icon: {
+    width: '100%',
+    height: '100%',
+    marginVertical: 10,
   },
   notFoundText: {
-    flexGrow: 1,
     width: '100%',
-    marginTop: 50,
     color: '#FFF',
     textAlign: 'center',
-    fontSize: 22,
+    fontSize: 36,
   },
   forecastContainer: {
-    flexGrow: 1,
+    paddingVertical: 20,
+  },
+  forecastWrapper: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 20,
@@ -70,10 +75,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     width: 70,
     textAlign: 'center',
+    paddingBottom: 10,
   },
-  forecastIcon: {
+  forecastImageWrapper: {
     width: 40,
     height: 40,
+    marginBottom: 10,
+  },
+  forecastIcon: {
+    width: '100%',
+    height: '100%',
   },
 });
 

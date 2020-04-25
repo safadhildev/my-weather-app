@@ -106,6 +106,7 @@ const Search = ({onPress, onChangeText, value, weather}) => {
         onChangeText={onChangeText}
         value={value}
         placeholderTextColor={'rgba(255,255,255,0.7)'}
+        allowFontScaling={false}
       />
       <TouchableOpacity style={buttonBackgroundColor()} onPress={onPress}>
         <View>
