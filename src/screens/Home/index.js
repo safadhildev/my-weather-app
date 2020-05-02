@@ -9,6 +9,7 @@ import {
   Dimensions,
   FlatList,
   Platform,
+  StatusBar,
 } from 'react-native';
 import Search from '../../components/common/Search';
 import Button from '../../components/common/Button';
@@ -28,11 +29,13 @@ const Home = ({navigation, route}) => {
   const [city, setCity] = useState(null);
   const [currentData, setCurrentData] = useState(null);
   const [main, setMain] = useState(null);
-  const [forecastData, setForecastData] = useState(null);
+  const [forecastData, setForecastData] = useState([]);
+  const [groupData, setGroupData] = useState(null);
   const [fiveData, setFiveData] = useState(null);
   const [error, setError] = useState(true);
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     if (route.params?.updated) {
@@ -100,13 +103,20 @@ const Home = ({navigation, route}) => {
           temperature: kelvinToCelcius(data.main.temp),
           tempMax: kelvinToCelcius(data.main.temp_max),
           tempMin: kelvinToCelcius(data.main.temp_min),
+          feels_like: kelvinToCelcius(data.main.feels_like),
           description: data.weather[0].description,
           main: data.weather[0].main,
           date: moment().format('dddd, MMM Do YYYY'),
           time: moment().tz('Asia/Kuala_Lumpur').format('LT'),
+          sunrise: moment.unix(data.sys.sunrise).format('LT'),
+          sunset: moment.unix(data.sys.sunset).format('LT'),
+          humidity: data.main.humidity,
+          pressure: data.main.pressure,
+          wind: data.wind.speed,
         });
         setMain(data.weather[0].main);
         setError(false);
+        console.log(data);
       }
     } catch (error) {
       console.log('Error', error);
@@ -132,9 +142,7 @@ const Home = ({navigation, route}) => {
           forecasts.push(oneData);
         });
         setForecastData(forecasts);
-        setFiveData(forecasts.slice(0, 5));
         setError(false);
-        console.log(forecasts.slice(0, 10));
       }
     } catch (error) {
       console.log('Error', error);
@@ -223,79 +231,178 @@ const Home = ({navigation, route}) => {
     navigation.navigate('Details', {currentData, forecastData});
   };
 
+  const hideKeyboard = () => {
+    Keyboard.dismiss;
+  };
+
   return (
     <LinearGradient
       colors={
         currentData ? backgroundColor(currentData.main) : color.linearGreen
       }
       style={styles.homeBody}>
-      <Search
-        onChangeText={(text) => {
-          setCity(text);
-        }}
-        onPress={() => {
-          onSearch();
-        }}
-        value={city}
-        weather={main}
-      />
+      {show ? (
+        <LinearGradient
+          colors={
+            currentData ? backgroundColor(currentData.main) : color.linearGreen
+          }
+          style={{height: height}}>
+          <TouchableWithoutFeedback
+            onPress={Keyboard.dismiss}
+            onBlur={() => setShow(false)}>
+            <View
+              style={{
+                position: 'absolute',
+                width: '100%',
+                height: height,
+                paddingTop: 40,
+                zIndex: 1,
+              }}
+              onPress={() => {
+                alert('ded');
+              }}>
+              <Search
+                onChangeText={(text) => {
+                  setCity(text);
+                }}
+                onPress={() => {
+                  onSearch();
+                  setShow(false);
+                }}
+                value={city}
+                weather={main}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+        </LinearGradient>
+      ) : (
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            paddingTop: 60,
+            paddingHorizontal: 20,
+            width: '100%',
+          }}>
+          <View style={{flex: 1, paddingEnd: 10}}>
+            <Text
+              style={{
+                fontSize: 24,
+                color: '#fff',
+                fontWeight: 'bold',
+                lineHeight: 28,
+              }}>
+              {currentData ? currentData.city : 'City not found'}
+            </Text>
+          </View>
+          <Button
+            title={'Search'}
+            onPress={() => {
+              setShow(!show);
+            }}
+          />
+        </View>
+      )}
+
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.container}>
+        <View style={show ? {} : styles.container}>
           {currentData && (
             <View
               style={{
-                alignItems: 'center',
-                marginTop: 100,
+                flex: 1,
               }}>
-              <Text style={styles.currentCityText}>{currentData.city}</Text>
-              <Text style={styles.currentDateText}>{currentData.date}</Text>
-              <Text style={styles.currentTimeText}>{currentData.time}</Text>
-              <View style={styles.imageWrapper}>
-                <Image
-                  source={renderIcon(currentData.main)}
-                  style={styles.icon}
-                />
-              </View>
-              <Text style={styles.currentTempText}>
-                {currentData.temperature}°C
-              </Text>
-              <Text style={styles.currentDetailsText}>
-                {currentData.description}
-              </Text>
-
-              <View style={styles.buttonWrapper}>
-                <Button
-                  title={'More'}
-                  onPress={() => {
-                    onDetails();
-                  }}
-                />
-              </View>
-            </View>
-          )}
-
-          {forecastData && (
-            <View>
-              <FlatList
-                data={forecastData && forecastData.slice(0, 5)}
-                renderItem={(item) => renderForecast(item)}
-                horizontal
-                style={{}}
-                contentContainerStyle={{
+              {/* Top */}
+              <View
+                style={{
                   flex: 1,
+                  flexDirection: 'row',
                   justifyContent: 'space-between',
-                  paddingHorizontal: 10,
-                }}
-                keyExtractor={(item, index) => {
-                  index;
-                }}
-              />
-            </View>
-          )}
+                  alignItems: 'center',
+                }}>
+                <View>
+                  <Text style={styles.currentDetailsText}>
+                    {currentData.main}
+                  </Text>
+                  <Text style={styles.currentDetailsText}>
+                    {currentData.description}
+                  </Text>
+                  <Text style={styles.currentTempText}>
+                    {currentData.temperature}°C
+                  </Text>
+                </View>
+                <View style={styles.imageWrapper}>
+                  <Image
+                    source={renderIcon(currentData.main)}
+                    style={styles.icon}
+                  />
+                </View>
+              </View>
 
-          {error && (
-            <View>
-              <Text style={styles.notFoundText}>City not found</Text>
+              {/* Bot */}
+              <View>
+                <View style={styles.buttonWrapper}>
+                  <Button
+                    title={'More'}
+                    onPress={() => {
+                      onDetails();
+                    }}
+                  />
+                </View>
+                <View
+                  style={{
+                    backgroundColor: '#fff',
+                    borderRadius: 20,
+                    marginBottom: 20,
+                    paddingHorizontal: 30,
+                  }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginVertical: 10,
+                    }}>
+                    <View style={{alignItems: 'center'}}>
+                      <Text style={{fontSize: 14}}>Min</Text>
+                      <Text style={{fontSize: 20, fontWeight: 'bold'}}>
+                        {currentData.tempMin}°C
+                      </Text>
+                    </View>
+                    <View style={{alignItems: 'center'}}>
+                      <Text style={{fontSize: 14}}>Feels Like</Text>
+                      <Text style={{fontSize: 28, fontWeight: 'bold'}}>
+                        {currentData.feels_like}°C
+                      </Text>
+                    </View>
+                    <View style={{alignItems: 'center'}}>
+                      <Text style={{fontSize: 14}}>Max</Text>
+                      <Text style={{fontSize: 20, fontWeight: 'bold'}}>
+                        {currentData.tempMax}°C
+                      </Text>
+                    </View>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-around',
+                      marginVertical: 10,
+                    }}>
+                    <View style={{alignItems: 'center'}}>
+                      <Text style={{fontSize: 14}}>Speed</Text>
+                      <Text style={{fontSize: 28, fontWeight: 'bold'}}>
+                        {currentData.wind} km/h
+                      </Text>
+                    </View>
+                    <View style={{alignItems: 'center'}}>
+                      <Text style={{fontSize: 14}}>Humidity</Text>
+                      <Text style={{fontSize: 28, fontWeight: 'bold'}}>
+                        {currentData.humidity} %
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
             </View>
           )}
         </View>

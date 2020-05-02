@@ -3,15 +3,17 @@ import {StyleSheet, Dimensions} from 'react-native';
 const height = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
-  homeBody: {flexGrow: 1, paddingTop: 40},
+  homeBody: {flexGrow: 1},
   container: {
     flex: 1,
     justifyContent: 'space-between',
+    padding: 20,
   },
   buttonWrapper: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    paddingVertical: 10,
   },
   currentWeatherContainer: {
     flex: 1,
@@ -44,8 +46,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   imageWrapper: {
-    width: 100,
-    height: 100,
+    width: 150,
+    height: 150,
   },
   icon: {
     width: '100%',

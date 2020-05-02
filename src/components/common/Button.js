@@ -6,9 +6,9 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     width: 80,
+    height: 30,
     paddingVertical: 5,
     borderRadius: 20,
-    marginHorizontal: 20,
   },
   buttonWrapper: {
     justifyContent: 'center',
