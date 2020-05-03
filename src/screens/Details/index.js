@@ -55,35 +55,61 @@ const Details = ({route, navigation}) => {
     }
   };
 
-  console.log('group', forecastGroup);
+  console.log('group', forecastGroup[2]);
 
-  renderForecast = ({item}) => {
+  const renderDailyForecast = ({item}) => {
     return (
       <View
         style={{
           marginVertical: 5,
           borderRadius: 10,
           paddingVertical: 10,
+        }}>
+        <View style={{flex: 1}}>
+          <Text style={{color: '#fff'}}>
+            {moment(item.date).format('ddd')}, {item.date}
+          </Text>
+        </View>
+        <FlatList
+          data={item.lists}
+          renderItem={(item) => renderItems(item)}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={(item, index) => item.id}
+        />
+      </View>
+    );
+  };
+
+  const renderItems = ({item}) => {
+    return (
+      <View
+        style={{
+          marginVertical: 5,
+          backgroundColor: '#fff',
+          padding: 10,
+          borderRadius: 4,
           flexDirection: 'row',
         }}>
         <View style={{flex: 1}}>
-          <Text style={{color: '#fff'}}>{item.time}</Text>
-          <Text style={{color: '#fff'}}>{item.date}</Text>
+          <Text style={{fontSize: 18, fontWeight: 'bold'}}>{item.time}</Text>
+          <Text>{item.main}</Text>
+          <Text>{item.description}</Text>
         </View>
-        <View style={{flex: 1, alignItems: 'flex-end', paddingHorizontal: 10}}>
-          <Text style={{color: '#fff'}}>{item.temperature}°C</Text>
-          <Text style={{color: '#eee', fontSize: 11}}>{item.description}</Text>
+        <View style={{justifyContent: 'center', paddingHorizontal: 20}}>
+          <Text style={{fontSize: 20, fontWeight: 'bold'}}>
+            {item.temperature}°C
+          </Text>
         </View>
-        <View style={{alignItems: 'flex-end', width: 30, height: 30}}>
+        <View>
           <Image
             source={renderIcon(item.main)}
-            resizeMode="contain"
-            style={{width: '100%', height: '100%'}}
+            style={{width: 50, height: 50, tintColor: '#212121'}}
           />
         </View>
       </View>
     );
   };
+
   const renderIcon = (condition) => {
     switch (condition) {
       case 'Clouds':
@@ -108,17 +134,19 @@ const Details = ({route, navigation}) => {
           flex: 1,
           paddingTop: 40,
         }}>
-        <Button
-          title="Back"
-          onPress={() => {
-            navigation.goBack();
-          }}
-        />
+        <View style={{paddingHorizontal: 20, paddingTop: 20}}>
+          <Button
+            title="Back"
+            onPress={() => {
+              navigation.goBack();
+            }}
+          />
+        </View>
         <FlatList
           ListHeaderComponent={<DetailsHeader currentData={currentData} />}
           showsVerticalScrollIndicator={false}
           data={forecastGroup}
-          renderItem={(item) => renderForecast(item)}
+          renderItem={(item) => renderDailyForecast(item)}
           style={{
             flexGrow: 1,
             marginHorizontal: 20,

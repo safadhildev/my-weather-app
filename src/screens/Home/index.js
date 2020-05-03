@@ -37,15 +37,9 @@ const Home = ({navigation, route}) => {
   const [longitude, setLongitude] = useState(null);
   const [show, setShow] = useState(false);
 
-  useEffect(() => {
-    if (route.params?.updated) {
-      console.log('Updated', route.params?.updated);
-    }
-  }, [route.params?.updated]);
-
-  useEffect(() => {
-    getCurrentLocationWeather();
-  }, [latitude, longitude]);
+  // useEffect(() => {
+  //   getCurrentLocationWeather();
+  // }, [latitude, longitude]);
 
   const getLocation = async () => {
     if (Platform.OS !== 'android') Geolocation.requestAuthorization();
@@ -97,6 +91,7 @@ const Home = ({navigation, route}) => {
       if (response.status === 200) {
         const data = await response.json();
         // console.log(moment().tz('Asia/Kuala_Lumpur').format('LTS'));
+        const gmt = moment().utc().unix(data.dt);
 
         setCurrentData({
           city: `${data.name}, ${data.sys.country}`,
@@ -106,8 +101,8 @@ const Home = ({navigation, route}) => {
           feels_like: kelvinToCelcius(data.main.feels_like),
           description: data.weather[0].description,
           main: data.weather[0].main,
-          date: moment().format('dddd, MMM Do YYYY'),
-          time: moment().tz('Asia/Kuala_Lumpur').format('LT'),
+          date: moment.unix(gmt).format('dddd, MMM Do YYYY'),
+          time: moment.unix(gmt).format('LT'),
           sunrise: moment.unix(data.sys.sunrise).format('LT'),
           sunset: moment.unix(data.sys.sunset).format('LT'),
           humidity: data.main.humidity,
@@ -117,6 +112,11 @@ const Home = ({navigation, route}) => {
         setMain(data.weather[0].main);
         setError(false);
         console.log(data);
+        await getForecastData(
+          `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=a31e03e7c69aaf51a115819113a8b3d7`,
+        );
+      } else {
+        alert(`Cannot get weather for ${city}`);
       }
     } catch (error) {
       console.log('Error', error);
@@ -128,21 +128,30 @@ const Home = ({navigation, route}) => {
       const response = await fetch(url);
       if (response.status === 200) {
         const data = await response.json();
+        console.log('Data', data.list);
+
         const forecastArray = data.list;
         let forecasts = [];
         forecastArray.forEach((item) => {
           const oneData = {
-            time: moment.unix(item.dt).tz('Asia/Kuala_Lumpur').format('LT'),
+            time: moment(item.dt_txt).format('LT'),
             temperature: kelvinToCelcius(item.main.temp_max),
             description: item.weather[0].description,
             main: item.weather[0].main,
-            date: moment.unix(item.dt).format('l'),
+            date: moment(item.dt_txt).format('l'),
             id: item.dt,
+            dt_txt: item.dt_txt,
           };
           forecasts.push(oneData);
         });
         setForecastData(forecasts);
         setError(false);
+        forecasts.sort(function (a, b) {
+          return a.id - b.id;
+        });
+        console.log(forecasts);
+      } else {
+        alert(`Cannot get forecast weather for ${city}`);
       }
     } catch (error) {
       console.log('Error', error);
@@ -151,8 +160,6 @@ const Home = ({navigation, route}) => {
   };
 
   const onSearch = async () => {
-    console.log('Search City:', city);
-
     if (!city) {
       setCurrentData(null);
       setError(true);
@@ -160,37 +167,7 @@ const Home = ({navigation, route}) => {
       await getData(
         `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=a31e03e7c69aaf51a115819113a8b3d7`,
       );
-      await getForecastData(
-        `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=a31e03e7c69aaf51a115819113a8b3d7`,
-      );
     }
-  };
-
-  const renderForecast = ({item}) => {
-    return (
-      <View
-        style={{
-          alignItems: 'center',
-        }}>
-        <Text style={styles.forecastText} allowFontScaling={false}>
-          {item.time}
-        </Text>
-        <View style={styles.forecastImageWrapper}>
-          <Image
-            source={renderIcon(item.main)}
-            style={styles.forecastIcon}
-            resizeMode="contain"
-          />
-        </View>
-        <Text style={styles.forecastText} allowFontScaling={false}>
-          {item.temperature}°C
-        </Text>
-
-        <Text style={styles.forecastText} allowFontScaling={false}>
-          {item.description}
-        </Text>
-      </View>
-    );
   };
 
   const renderIcon = (condition) => {
@@ -246,7 +223,7 @@ const Home = ({navigation, route}) => {
           colors={
             currentData ? backgroundColor(currentData.main) : color.linearGreen
           }
-          style={{height: height}}>
+          style={{flexGrow: 1}}>
           <TouchableWithoutFeedback
             onPress={Keyboard.dismiss}
             onBlur={() => setShow(false)}>
@@ -254,12 +231,9 @@ const Home = ({navigation, route}) => {
               style={{
                 position: 'absolute',
                 width: '100%',
-                height: height,
-                paddingTop: 40,
+                height: '100%',
+                paddingTop: 35,
                 zIndex: 1,
-              }}
-              onPress={() => {
-                alert('ded');
               }}>
               <Search
                 onChangeText={(text) => {
@@ -272,6 +246,19 @@ const Home = ({navigation, route}) => {
                 value={city}
                 weather={main}
               />
+
+              <View>
+                <Text
+                  style={{
+                    fontSize: 36,
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    alignSelf: 'center',
+                    marginVertical: 50,
+                  }}>
+                  Search a city
+                </Text>
+              </View>
             </View>
           </TouchableWithoutFeedback>
         </LinearGradient>
@@ -279,34 +266,25 @@ const Home = ({navigation, route}) => {
         <View
           style={{
             flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
+            justifyContent: 'flex-end',
+            alignItems: 'flex-end',
             paddingTop: 60,
-            paddingHorizontal: 20,
+            paddingHorizontal: 30,
             width: '100%',
           }}>
-          <View style={{flex: 1, paddingEnd: 10}}>
-            <Text
-              style={{
-                fontSize: 24,
-                color: '#fff',
-                fontWeight: 'bold',
-                lineHeight: 28,
-              }}>
-              {currentData ? currentData.city : 'City not found'}
-            </Text>
-          </View>
           <Button
             title={'Search'}
             onPress={() => {
               setShow(!show);
             }}
+            search
+            weather={currentData && currentData.main}
           />
         </View>
       )}
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={show ? {} : styles.container}>
+        <View style={show ? {zIndex: -1} : styles.container}>
           {currentData && (
             <View
               style={{
@@ -316,26 +294,35 @@ const Home = ({navigation, route}) => {
               <View
                 style={{
                   flex: 1,
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}>
                 <View>
+                  <Text style={styles.currentCityText}>
+                    {currentData ? currentData.city : 'Search a city'}
+                  </Text>
                   <Text style={styles.currentDetailsText}>
                     {currentData.main}
                   </Text>
                   <Text style={styles.currentDetailsText}>
                     {currentData.description}
                   </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-evenly',
+                    alignItems: 'center',
+                    marginVertical: 20,
+                  }}>
                   <Text style={styles.currentTempText}>
                     {currentData.temperature}°C
                   </Text>
-                </View>
-                <View style={styles.imageWrapper}>
-                  <Image
-                    source={renderIcon(currentData.main)}
-                    style={styles.icon}
-                  />
+                  <View style={styles.imageWrapper}>
+                    <Image
+                      source={renderIcon(currentData.main)}
+                      style={styles.icon}
+                    />
+                  </View>
                 </View>
               </View>
 
@@ -364,19 +351,21 @@ const Home = ({navigation, route}) => {
                       marginVertical: 10,
                     }}>
                     <View style={{alignItems: 'center'}}>
-                      <Text style={{fontSize: 14}}>Min</Text>
+                      <Text style={{fontSize: 14, color: color.grey}}>Min</Text>
                       <Text style={{fontSize: 20, fontWeight: 'bold'}}>
                         {currentData.tempMin}°C
                       </Text>
                     </View>
                     <View style={{alignItems: 'center'}}>
-                      <Text style={{fontSize: 14}}>Feels Like</Text>
+                      <Text style={{fontSize: 14, color: color.grey}}>
+                        Feels Like
+                      </Text>
                       <Text style={{fontSize: 28, fontWeight: 'bold'}}>
                         {currentData.feels_like}°C
                       </Text>
                     </View>
                     <View style={{alignItems: 'center'}}>
-                      <Text style={{fontSize: 14}}>Max</Text>
+                      <Text style={{fontSize: 14, color: color.grey}}>Max</Text>
                       <Text style={{fontSize: 20, fontWeight: 'bold'}}>
                         {currentData.tempMax}°C
                       </Text>
@@ -389,13 +378,17 @@ const Home = ({navigation, route}) => {
                       marginVertical: 10,
                     }}>
                     <View style={{alignItems: 'center'}}>
-                      <Text style={{fontSize: 14}}>Speed</Text>
+                      <Text style={{fontSize: 14, color: color.grey}}>
+                        Speed
+                      </Text>
                       <Text style={{fontSize: 28, fontWeight: 'bold'}}>
                         {currentData.wind} km/h
                       </Text>
                     </View>
                     <View style={{alignItems: 'center'}}>
-                      <Text style={{fontSize: 14}}>Humidity</Text>
+                      <Text style={{fontSize: 14, color: color.grey}}>
+                        Humidity
+                      </Text>
                       <Text style={{fontSize: 28, fontWeight: 'bold'}}>
                         {currentData.humidity} %
                       </Text>

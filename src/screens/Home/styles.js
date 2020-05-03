@@ -4,10 +4,14 @@ const height = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
   homeBody: {flexGrow: 1},
+  searchContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    padding: 20,
+    padding: 30,
   },
   buttonWrapper: {
     width: '100%',
@@ -26,8 +30,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   currentCityText: {
-    fontSize: 16,
+    fontSize: 24,
     color: '#FFFFFF',
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
   currentDateText: {
     fontSize: 16,
@@ -40,19 +46,21 @@ const styles = StyleSheet.create({
   currentTempText: {
     fontSize: 56,
     color: '#FFFFFF',
+    textAlign: 'center',
   },
   currentDetailsText: {
     fontSize: 18,
     color: '#FFFFFF',
+    textAlign: 'center',
   },
   imageWrapper: {
-    width: 150,
-    height: 150,
+    width: 130,
+    height: 130,
   },
   icon: {
     width: '100%',
     height: '100%',
-    marginVertical: 10,
+    resizeMode: 'contain',
   },
   notFoundText: {
     width: '100%',

@@ -23,6 +23,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     opacity: 1,
     color: '#FFF',
+    height: '100%',
   },
   greenSearchButton: {
     width: 30,
